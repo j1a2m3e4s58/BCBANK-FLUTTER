@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+set -x
 
 FLUTTER_VERSION="${FLUTTER_VERSION:-stable}"
 FLUTTER_DIR="$PWD/.render/flutter"
@@ -11,7 +12,11 @@ fi
 
 export PATH="$FLUTTER_DIR/bin:$PATH"
 
+echo "==> Flutter SDK"
 flutter --version
+echo "==> Enable web"
 flutter config --enable-web
+echo "==> Fetch packages"
 flutter pub get
-flutter build web --release
+echo "==> Build web"
+flutter build web --release --verbose

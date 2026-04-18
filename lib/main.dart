@@ -610,7 +610,7 @@ class _DemoLoginFormState extends State<DemoLoginForm> {
 }
 
 class RegisterForm extends StatefulWidget {
-  final VoidCallback onAuthenticated;
+  final ValueChanged<DemoCustomerProfile> onAuthenticated;
   final VoidCallback onSwitchToLogin;
 
   const RegisterForm({
@@ -1059,8 +1059,23 @@ class _BankingShellState extends State<BankingShell> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 760;
-    final pages = [
+    final isMobile = MediaQuery.of(context).size.width < 960;
+    final desktopPages = [
+      DashboardPage(profile: widget.profile),
+      TransferPage(profile: widget.profile),
+      MobileMoneyPage(profile: widget.profile),
+      CardsPage(profile: widget.profile),
+      PaymentsPage(profile: widget.profile),
+      LoansPage(profile: widget.profile),
+      SavingsPage(profile: widget.profile),
+      const BudgetPage(),
+      const NotificationsPage(),
+      const AtmLocatorPage(),
+      const SupportPage(),
+      AdminBackOfficePage(profile: widget.profile),
+      SettingsPage(profile: widget.profile),
+    ];
+    final mobilePages = [
       DashboardPage(profile: widget.profile),
       TransferPage(profile: widget.profile),
       MobileMoneyPage(profile: widget.profile),
@@ -1070,23 +1085,345 @@ class _BankingShellState extends State<BankingShell> {
       MorePage(profile: widget.profile),
     ];
 
+    if (isMobile) {
+      final mobileIndex = selectedPage >= mobilePages.length ? 0 : selectedPage;
+      return Scaffold(
+        backgroundColor: BcbColors.appDark,
+        body: Column(
+          children: [
+            Expanded(child: mobilePages[mobileIndex]),
+            MobileBottomNav(
+              selectedIndex: mobileIndex,
+              onItemTap: (index) => setState(() => selectedPage = index),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: BcbColors.appDark,
-      body: Column(
+      body: DesktopBankingShell(
+        profile: widget.profile,
+        selectedIndex: selectedPage,
+        onItemTap: (index) => setState(() => selectedPage = index),
+        onLogout: widget.onLogout,
+        child: desktopPages[selectedPage],
+      ),
+    );
+  }
+}
+
+class DesktopBankingShell extends StatelessWidget {
+  final DemoCustomerProfile profile;
+  final int selectedIndex;
+  final ValueChanged<int> onItemTap;
+  final VoidCallback onLogout;
+  final Widget child;
+
+  const DesktopBankingShell({
+    super.key,
+    required this.profile,
+    required this.selectedIndex,
+    required this.onItemTap,
+    required this.onLogout,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const DesktopWarningBar(),
+        Expanded(
+          child: Row(
+            children: [
+              DesktopSidebar(
+                profile: profile,
+                selectedIndex: selectedIndex,
+                onItemTap: onItemTap,
+                onLogout: onLogout,
+              ),
+              Expanded(child: child),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class DesktopWarningBar extends StatelessWidget {
+  const DesktopWarningBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      decoration: const BoxDecoration(
+        color: BcbColors.warning,
+        border: Border(
+          top: BorderSide(color: BcbColors.primary, width: 2),
+          bottom: BorderSide(color: Color(0x66483C1A)),
+        ),
+      ),
+      child: const Center(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Color(0xFFF0D072), size: 18),
+            SizedBox(width: 10),
+            Text(
+              'Demo mode: login accepts any account number and password. Transactions are test data only.',
+              style: TextStyle(
+                color: Color(0xFFF0D072),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class DesktopSidebar extends StatelessWidget {
+  final DemoCustomerProfile profile;
+  final int selectedIndex;
+  final ValueChanged<int> onItemTap;
+  final VoidCallback onLogout;
+
+  const DesktopSidebar({
+    super.key,
+    required this.profile,
+    required this.selectedIndex,
+    required this.onItemTap,
+    required this.onLogout,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      const _DesktopNavSection('MAIN', [
+        _DesktopNavItem(0, Icons.grid_view_rounded, 'Dashboard'),
+        _DesktopNavItem(1, Icons.swap_horiz_rounded, 'Transfer'),
+        _DesktopNavItem(2, Icons.phone_android_rounded, 'Mobile Money'),
+        _DesktopNavItem(3, Icons.credit_card_rounded, 'Cards'),
+        _DesktopNavItem(4, Icons.account_balance_wallet_rounded, 'Payments'),
+      ]),
+      const _DesktopNavSection('FINANCE', [
+        _DesktopNavItem(5, Icons.request_quote_rounded, 'Loans'),
+        _DesktopNavItem(6, Icons.savings_outlined, 'Savings Goals'),
+        _DesktopNavItem(7, Icons.receipt_long_rounded, 'Budget'),
+      ]),
+      const _DesktopNavSection('MORE', [
+        _DesktopNavItem(8, Icons.notifications_none_rounded, 'Notifications'),
+        _DesktopNavItem(9, Icons.place_outlined, 'ATM Locator'),
+        _DesktopNavItem(10, Icons.headset_mic_outlined, 'Support'),
+        _DesktopNavItem(11, Icons.shield_outlined, 'Staff Admin'),
+        _DesktopNavItem(12, Icons.settings_outlined, 'Settings'),
+      ]),
+    ];
+
+    return Container(
+      width: 255,
+      decoration: const BoxDecoration(
+        color: Color(0xFF12161F),
+        border: Border(right: BorderSide(color: BcbColors.lineDark)),
+      ),
+      child: Column(
         children: [
-          if (!isMobile)
-            BcbNavBar(
-              selectedIndex: selectedPage,
-              onItemTap: (index) => setState(() => selectedPage = index),
-              onLogout: widget.onLogout,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 22, 14, 18),
+            child: Row(
+              children: [
+                Container(
+                  width: 54,
+                  height: 54,
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F2E1F),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: const Color(0xFF224B34)),
+                  ),
+                  child: Image.asset('assets/images/bcb-logo.png'),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Bawjiase CB',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Community Bank PLC',
+                        style: TextStyle(color: BcbColors.textSoft, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          Expanded(child: pages[selectedPage]),
-          if (isMobile)
-            MobileBottomNav(
-              selectedIndex: selectedPage,
-              onItemTap: (index) => setState(() => selectedPage = index),
+          ),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+              children: items
+                  .expand((section) => [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+                          child: Text(
+                            section.label,
+                            style: const TextStyle(
+                              color: Color(0xFF555F71),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                        ),
+                        ...section.items.map(
+                          (item) => Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: DesktopSidebarItem(
+                              item: item,
+                              selected: selectedIndex == item.index,
+                              onTap: () => onItemTap(item.index),
+                            ),
+                          ),
+                        ),
+                      ])
+                  .toList(),
             ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: BcbColors.panelDark,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: BcbColors.lineDark),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: const Color(0xFF0F544C),
+                        child: Text(
+                          profile.fullName.isNotEmpty ? profile.fullName.characters.first.toUpperCase() : 'D',
+                          style: const TextStyle(color: BcbColors.aqua, fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(profile.fullName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+                            const SizedBox(height: 2),
+                            Text(
+                              '***${profile.accountNumber.length >= 4 ? profile.accountNumber.substring(profile.accountNumber.length - 4) : profile.accountNumber}',
+                              style: const TextStyle(color: BcbColors.textSoft, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: onLogout,
+                    icon: const Icon(Icons.logout_rounded, size: 18),
+                    label: const Text('Logout'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: BcbColors.textSoft,
+                      side: const BorderSide(color: BcbColors.lineDark),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _DesktopNavSection {
+  final String label;
+  final List<_DesktopNavItem> items;
+
+  const _DesktopNavSection(this.label, this.items);
+}
+
+class _DesktopNavItem {
+  final int index;
+  final IconData icon;
+  final String label;
+
+  const _DesktopNavItem(this.index, this.icon, this.label);
+}
+
+class DesktopSidebarItem extends StatelessWidget {
+  final _DesktopNavItem item;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const DesktopSidebarItem({
+    super.key,
+    required this.item,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF12342F) : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: selected ? const Color(0xFF1B645C) : Colors.transparent),
+          boxShadow: selected
+              ? const [
+                  BoxShadow(
+                    color: Color(0x2200D3C8),
+                    blurRadius: 16,
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          children: [
+            Icon(item.icon, color: selected ? BcbColors.aqua : const Color(0xFF7F8799), size: 20),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                item.label,
+                style: TextStyle(
+                  color: selected ? BcbColors.aqua : const Color(0xFF8B93A6),
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1444,40 +1781,9 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final isMobile = width < 760;
+    final isMobile = width < 960;
 
-    return SingleChildScrollView(
-      child: Container(
-        color: BcbColors.appDark,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1320),
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 0 : 22,
-                vertical: isMobile ? 0 : 18,
-              ),
-              child: isMobile
-                  ? MobileDashboard(profile: profile)
-                  : const Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 5,
-                          child: BankingHero(),
-                        ),
-                        SizedBox(width: 24),
-                        Expanded(
-                          flex: 4,
-                          child: ActivityPanel(),
-                        ),
-                      ],
-                    ),
-            ),
-          ),
-        ),
-      ),
-    );
+    return isMobile ? SingleChildScrollView(child: MobileDashboard(profile: profile)) : DesktopDashboardPage(profile: profile);
   }
 }
 
@@ -2495,6 +2801,10 @@ class TransferPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 960;
+    if (!isMobile) {
+      return DesktopTransferPage(profile: profile);
+    }
     return BankingPageScaffold(
       title: 'Send Money',
       subtitle:
@@ -2523,6 +2833,10 @@ class MobileMoneyPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 960;
+    if (!isMobile) {
+      return DesktopMobileMoneyPage(profile: profile);
+    }
     return BankingPageScaffold(
       title: 'Mobile Money',
       subtitle: 'Send to MTN, Telecel, and AirtelTigo wallets with a simple guided flow.',
@@ -2548,6 +2862,10 @@ class PaymentsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 960;
+    if (!isMobile) {
+      return DesktopPaymentsPage(profile: profile);
+    }
     return BankingPageScaffold(
       title: 'Bills and Airtime',
       subtitle:
@@ -2615,6 +2933,10 @@ class CardsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 960;
+    if (!isMobile) {
+      return DesktopCardsPage(profile: profile);
+    }
     return BankingPageScaffold(
       title: 'Cards',
       subtitle:
@@ -2643,6 +2965,10 @@ class SavingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 960;
+    if (!isMobile) {
+      return DesktopSavingsPage(profile: profile);
+    }
     return BankingPageScaffold(
       title: 'Savings Goals',
       subtitle:
@@ -2664,6 +2990,10 @@ class SupportPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 960;
+    if (!isMobile) {
+      return const DesktopSupportPage();
+    }
     return BankingPageScaffold(
       title: 'BCB Support',
       subtitle:
@@ -2787,6 +3117,55 @@ class MorePage extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class LoansPage extends StatelessWidget {
+  final DemoCustomerProfile profile;
+
+  const LoansPage({super.key, required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return DesktopLoansPage(profile: profile);
+  }
+}
+
+class BudgetPage extends StatelessWidget {
+  const BudgetPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DesktopBudgetPage();
+  }
+}
+
+class NotificationsPage extends StatelessWidget {
+  const NotificationsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DesktopNotificationsPage();
+  }
+}
+
+class AtmLocatorPage extends StatelessWidget {
+  const AtmLocatorPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DesktopAtmLocatorPage();
+  }
+}
+
+class SettingsPage extends StatelessWidget {
+  final DemoCustomerProfile profile;
+
+  const SettingsPage({super.key, required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return DesktopSettingsPage(profile: profile);
   }
 }
 
@@ -3181,10 +3560,16 @@ class LoanApplicationPage extends StatelessWidget {
 }
 
 class AdminBackOfficePage extends StatelessWidget {
-  const AdminBackOfficePage({super.key});
+  final DemoCustomerProfile? profile;
+
+  const AdminBackOfficePage({super.key, this.profile});
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 960;
+    if (!isMobile) {
+      return DesktopStaffAdminPage(profile: profile);
+    }
     return const Scaffold(
       backgroundColor: BcbColors.appDark,
       body: SafeArea(
