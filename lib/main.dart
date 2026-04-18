@@ -49,6 +49,22 @@ class BcbColors {
   static const warning = Color(0xFF2C2718);
 }
 
+class DemoCustomerProfile {
+  final String fullName;
+  final String accountNumber;
+  final String phoneNumber;
+  final String accountType;
+  final String transactionPin;
+
+  const DemoCustomerProfile({
+    required this.fullName,
+    required this.accountNumber,
+    required this.phoneNumber,
+    required this.accountType,
+    required this.transactionPin,
+  });
+}
+
 class BcbAuthGate extends StatefulWidget {
   const BcbAuthGate({super.key});
 
@@ -59,6 +75,7 @@ class BcbAuthGate extends StatefulWidget {
 class _BcbAuthGateState extends State<BcbAuthGate> {
   bool showSplash = true;
   bool isAuthenticated = false;
+  DemoCustomerProfile? profile;
 
   @override
   void initState() {
@@ -69,8 +86,20 @@ class _BcbAuthGateState extends State<BcbAuthGate> {
     });
   }
 
-  void enterDemo() {
-    setState(() => isAuthenticated = true);
+  void enterDemo([DemoCustomerProfile? nextProfile]) {
+    setState(() {
+      profile =
+          nextProfile ??
+          profile ??
+          const DemoCustomerProfile(
+            fullName: 'Demo Customer',
+            accountNumber: '00014821',
+            phoneNumber: '0240000000',
+            accountType: 'Savings Account',
+            transactionPin: '1234',
+          );
+      isAuthenticated = true;
+    });
   }
 
   void logout() {
@@ -84,10 +113,16 @@ class _BcbAuthGateState extends State<BcbAuthGate> {
     }
 
     if (!isAuthenticated) {
-      return AuthStartPage(onAuthenticated: enterDemo);
+      return AuthStartPage(
+        onAuthenticated: enterDemo,
+        existingProfile: profile,
+      );
     }
 
-    return BankingShell(onLogout: logout);
+    return BankingShell(
+      onLogout: logout,
+      profile: profile!,
+    );
   }
 }
 
@@ -195,11 +230,13 @@ class _BouncingLogoState extends State<BouncingLogo>
 }
 
 class AuthStartPage extends StatefulWidget {
-  final VoidCallback onAuthenticated;
+  final ValueChanged<DemoCustomerProfile> onAuthenticated;
+  final DemoCustomerProfile? existingProfile;
 
   const AuthStartPage({
     super.key,
     required this.onAuthenticated,
+    this.existingProfile,
   });
 
   @override
@@ -208,6 +245,7 @@ class AuthStartPage extends StatefulWidget {
 
 class _AuthStartPageState extends State<AuthStartPage> {
   bool isRegister = false;
+  bool showForgotPassword = false;
 
   @override
   Widget build(BuildContext context) {
@@ -255,8 +293,22 @@ class _AuthStartPageState extends State<AuthStartPage> {
                   AuthPanel(
                     isRegister: isRegister,
                     onToggle: () {
-                      setState(() => isRegister = !isRegister);
+                      setState(() {
+                        showForgotPassword = false;
+                        isRegister = !isRegister;
+                      });
                     },
+                    onForgotPassword: () {
+                      setState(() => showForgotPassword = true);
+                    },
+                    onBackToLogin: () {
+                      setState(() {
+                        showForgotPassword = false;
+                        isRegister = false;
+                      });
+                    },
+                    showForgotPassword: showForgotPassword,
+                    existingProfile: widget.existingProfile,
                     onAuthenticated: widget.onAuthenticated,
                   ),
                 ],
@@ -315,12 +367,20 @@ class DemoNotice extends StatelessWidget {
 class AuthPanel extends StatelessWidget {
   final bool isRegister;
   final VoidCallback onToggle;
-  final VoidCallback onAuthenticated;
+  final VoidCallback onForgotPassword;
+  final VoidCallback onBackToLogin;
+  final bool showForgotPassword;
+  final DemoCustomerProfile? existingProfile;
+  final ValueChanged<DemoCustomerProfile> onAuthenticated;
 
   const AuthPanel({
     super.key,
     required this.isRegister,
     required this.onToggle,
+    required this.onForgotPassword,
+    required this.onBackToLogin,
+    required this.showForgotPassword,
+    required this.existingProfile,
     required this.onAuthenticated,
   });
 
@@ -344,7 +404,9 @@ class AuthPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (isRegister)
+          if (showForgotPassword)
+            ForgotPasswordForm(onBackToLogin: onBackToLogin)
+          else if (isRegister)
             RegisterForm(
               onAuthenticated: onAuthenticated,
               onSwitchToLogin: onToggle,
@@ -353,6 +415,8 @@ class AuthPanel extends StatelessWidget {
             DemoLoginForm(
               onAuthenticated: onAuthenticated,
               onSwitchToRegister: onToggle,
+              onForgotPassword: onForgotPassword,
+              existingProfile: existingProfile,
             ),
         ],
       ),
@@ -398,13 +462,17 @@ class AuthTabButton extends StatelessWidget {
 }
 
 class DemoLoginForm extends StatefulWidget {
-  final VoidCallback onAuthenticated;
+  final ValueChanged<DemoCustomerProfile> onAuthenticated;
   final VoidCallback onSwitchToRegister;
+  final VoidCallback onForgotPassword;
+  final DemoCustomerProfile? existingProfile;
 
   const DemoLoginForm({
     super.key,
     required this.onAuthenticated,
     required this.onSwitchToRegister,
+    required this.onForgotPassword,
+    required this.existingProfile,
   });
 
   @override
@@ -412,8 +480,17 @@ class DemoLoginForm extends StatefulWidget {
 }
 
 class _DemoLoginFormState extends State<DemoLoginForm> {
-  final accountController = TextEditingController(text: '0200001234');
-  final passwordController = TextEditingController(text: 'password');
+  late final TextEditingController accountController;
+  late final TextEditingController passwordController;
+
+  @override
+  void initState() {
+    super.initState();
+    accountController = TextEditingController(
+      text: widget.existingProfile?.accountNumber ?? '0200001234',
+    );
+    passwordController = TextEditingController(text: 'password');
+  }
 
   @override
   void dispose() {
@@ -424,6 +501,18 @@ class _DemoLoginFormState extends State<DemoLoginForm> {
 
   @override
   Widget build(BuildContext context) {
+    final profile =
+        widget.existingProfile ??
+        DemoCustomerProfile(
+          fullName: 'Demo Customer',
+          accountNumber: accountController.text.trim().isEmpty
+              ? '0200001234'
+              : accountController.text.trim(),
+          phoneNumber: '0240000000',
+          accountType: 'Savings Account',
+          transactionPin: '1234',
+        );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -461,7 +550,19 @@ class _DemoLoginFormState extends State<DemoLoginForm> {
         FullWidthButton(
           label: 'Login',
           icon: Icons.login_rounded,
-          onPressed: widget.onAuthenticated,
+          onPressed: () {
+            widget.onAuthenticated(
+              DemoCustomerProfile(
+                fullName: profile.fullName,
+                accountNumber: accountController.text.trim().isEmpty
+                    ? profile.accountNumber
+                    : accountController.text.trim(),
+                phoneNumber: profile.phoneNumber,
+                accountType: profile.accountType,
+                transactionPin: profile.transactionPin,
+              ),
+            );
+          },
           backgroundColor: BcbColors.aqua,
           foregroundColor: BcbColors.appDark,
         ),
@@ -490,13 +591,16 @@ class _DemoLoginFormState extends State<DemoLoginForm> {
           ),
         ),
         const SizedBox(height: 18),
-        const Center(
-          child: Text(
-            'Forgot password?',
-            style: TextStyle(
-              color: BcbColors.aqua,
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
+        Center(
+          child: GestureDetector(
+            onTap: widget.onForgotPassword,
+            child: const Text(
+              'Forgot password?',
+              style: TextStyle(
+                color: BcbColors.aqua,
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ),
@@ -520,20 +624,50 @@ class RegisterForm extends StatefulWidget {
 }
 
 class _RegisterFormState extends State<RegisterForm> {
+  final nameController = TextEditingController();
   final accountController = TextEditingController();
   final phoneController = TextEditingController();
+  final ghanaCardController = TextEditingController();
+  final dobController = TextEditingController();
+  final addressController = TextEditingController();
+  final occupationController = TextEditingController();
+  final nextOfKinController = TextEditingController();
+  final branchController = TextEditingController();
+  final otpController = TextEditingController();
   final passwordController = TextEditingController();
+  final pinController = TextEditingController();
+  String selectedAccountType = 'Savings Account';
+  int currentStep = 0;
 
   @override
   void dispose() {
+    nameController.dispose();
     accountController.dispose();
     phoneController.dispose();
+    ghanaCardController.dispose();
+    dobController.dispose();
+    addressController.dispose();
+    occupationController.dispose();
+    nextOfKinController.dispose();
+    branchController.dispose();
+    otpController.dispose();
     passwordController.dispose();
+    pinController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final stepTitles = [
+      'Customer Details',
+      'KYC Details',
+      'Verification',
+      'Account Type',
+      'OTP Verification',
+      'Create PIN',
+    ];
+    final progress = (currentStep + 1) / stepTitles.length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -563,12 +697,12 @@ class _RegisterFormState extends State<RegisterForm> {
               Row(
                 children: [
                   Text(
-                    'Step 1 of 6',
+                    'Step ${currentStep + 1} of 6',
                     style: TextStyle(color: BcbColors.textSoft, fontSize: 14),
                   ),
                   Spacer(),
                   Text(
-                    '17%',
+                    '${(progress * 100).round()}%',
                     style: TextStyle(color: BcbColors.textSoft, fontSize: 14),
                   ),
                 ],
@@ -577,7 +711,7 @@ class _RegisterFormState extends State<RegisterForm> {
               ClipRRect(
                 borderRadius: BorderRadius.all(Radius.circular(999)),
                 child: LinearProgressIndicator(
-                  value: 0.17,
+                  value: progress,
                   minHeight: 8,
                   backgroundColor: BcbColors.lineDark,
                   valueColor: AlwaysStoppedAnimation(BcbColors.aqua),
@@ -601,7 +735,7 @@ class _RegisterFormState extends State<RegisterForm> {
             ),
             const SizedBox(width: 14),
             const Text(
-              'Customer Details',
+              '',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18,
@@ -611,35 +745,58 @@ class _RegisterFormState extends State<RegisterForm> {
           ],
         ),
         const SizedBox(height: 20),
-        AuthField(
-          controller: phoneController,
-          hint: 'Full legal name',
+        Text(
+          stepTitles[currentStep],
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+          ),
         ),
         const SizedBox(height: 16),
-        AuthField(
-          controller: accountController,
-          hint: 'Account number',
-        ),
-        const SizedBox(height: 16),
-        AuthField(
-          controller: phoneController,
-          hint: 'Phone number e.g. 0241234567',
-        ),
-        const SizedBox(height: 16),
-        AuthField(
-          controller: passwordController,
-          hint: 'Create password',
-          obscure: true,
-        ),
-        const SizedBox(height: 8),
+        ..._buildStepFields(),
         const SizedBox(height: 22),
         FullWidthButton(
-          label: 'Continue',
-          icon: Icons.arrow_forward_rounded,
-          onPressed: widget.onAuthenticated,
+          label: currentStep == 5 ? 'Create Account' : 'Continue',
+          icon: currentStep == 5
+              ? Icons.check_circle_rounded
+              : Icons.arrow_forward_rounded,
+          onPressed: () {
+            if (currentStep < 5) {
+              setState(() => currentStep += 1);
+              return;
+            }
+            widget.onAuthenticated(
+              DemoCustomerProfile(
+                fullName: nameController.text.trim().isEmpty
+                    ? 'Demo Customer'
+                    : nameController.text.trim(),
+                accountNumber: accountController.text.trim().isEmpty
+                    ? '00014821'
+                    : accountController.text.trim(),
+                phoneNumber: phoneController.text.trim().isEmpty
+                    ? '0240000000'
+                    : phoneController.text.trim(),
+                accountType: selectedAccountType,
+                transactionPin: pinController.text.trim().isEmpty
+                    ? '1234'
+                    : pinController.text.trim(),
+              ),
+            );
+          },
           backgroundColor: BcbColors.aqua,
           foregroundColor: BcbColors.appDark,
         ),
+        if (currentStep > 0) ...[
+          const SizedBox(height: 12),
+          FullWidthButton(
+            label: 'Back',
+            icon: Icons.arrow_back_rounded,
+            onPressed: () => setState(() => currentStep -= 1),
+            backgroundColor: BcbColors.panelSoft,
+            foregroundColor: Colors.white,
+          ),
+        ],
         const SizedBox(height: 20),
         Center(
           child: GestureDetector(
@@ -656,14 +813,241 @@ class _RegisterFormState extends State<RegisterForm> {
       ],
     );
   }
+
+  List<Widget> _buildStepFields() {
+    switch (currentStep) {
+      case 0:
+        return [
+          AuthField(controller: nameController, hint: 'Full legal name'),
+          const SizedBox(height: 16),
+          AuthField(controller: accountController, hint: 'Account number'),
+          const SizedBox(height: 16),
+          AuthField(
+            controller: phoneController,
+            hint: 'Phone number e.g. 0241234567',
+          ),
+          const SizedBox(height: 16),
+          AuthField(controller: passwordController, hint: 'Create password', obscure: true),
+        ];
+      case 1:
+        return [
+          AuthField(controller: ghanaCardController, hint: 'Ghana Card number'),
+          const SizedBox(height: 16),
+          AuthField(controller: dobController, hint: 'Date of birth'),
+          const SizedBox(height: 16),
+          AuthField(controller: addressController, hint: 'Residential address'),
+          const SizedBox(height: 16),
+          AuthField(controller: occupationController, hint: 'Occupation'),
+          const SizedBox(height: 16),
+          AuthField(controller: nextOfKinController, hint: 'Next of kin'),
+          const SizedBox(height: 16),
+          AuthField(controller: branchController, hint: 'Preferred branch'),
+        ];
+      case 2:
+        return const [
+          UploadPlaceholder(label: 'Upload Ghana Card front'),
+          SizedBox(height: 16),
+          UploadPlaceholder(label: 'Upload Ghana Card back'),
+          SizedBox(height: 16),
+          UploadPlaceholder(label: 'Selfie verification'),
+        ];
+      case 3:
+        return [
+          AccountTypeChoice(
+            selected: selectedAccountType,
+            onSelect: (value) => setState(() => selectedAccountType = value),
+          ),
+        ];
+      case 4:
+        return [
+          const Text(
+            'A demo OTP has been sent. Any 6 digits will work.',
+            style: TextStyle(color: BcbColors.textSoft),
+          ),
+          const SizedBox(height: 16),
+          AuthField(controller: otpController, hint: 'Enter 6-digit OTP'),
+        ];
+      default:
+        return [
+          const Text(
+            'Create a 4-digit transaction PIN for transfers and approvals.',
+            style: TextStyle(color: BcbColors.textSoft),
+          ),
+          const SizedBox(height: 16),
+          AuthField(controller: pinController, hint: 'Create 4-digit PIN', obscure: true),
+        ];
+    }
+  }
+}
+
+class ForgotPasswordForm extends StatefulWidget {
+  final VoidCallback onBackToLogin;
+
+  const ForgotPasswordForm({super.key, required this.onBackToLogin});
+
+  @override
+  State<ForgotPasswordForm> createState() => _ForgotPasswordFormState();
+}
+
+class _ForgotPasswordFormState extends State<ForgotPasswordForm> {
+  final accountController = TextEditingController();
+  final phoneController = TextEditingController();
+  final otpController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    accountController.dispose();
+    phoneController.dispose();
+    otpController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Reset Password',
+          style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Enter your account number, phone number, any 6-digit OTP, and a new password.',
+          style: TextStyle(color: BcbColors.textSoft, height: 1.6),
+        ),
+        const SizedBox(height: 22),
+        AuthField(controller: accountController, hint: 'Account number'),
+        const SizedBox(height: 16),
+        AuthField(controller: phoneController, hint: 'Phone number'),
+        const SizedBox(height: 16),
+        AuthField(controller: otpController, hint: 'Demo OTP code'),
+        const SizedBox(height: 16),
+        AuthField(controller: passwordController, hint: 'New password', obscure: true),
+        const SizedBox(height: 22),
+        FullWidthButton(
+          label: 'Reset Password',
+          icon: Icons.lock_reset_rounded,
+          onPressed: widget.onBackToLogin,
+          backgroundColor: BcbColors.aqua,
+          foregroundColor: BcbColors.appDark,
+        ),
+        const SizedBox(height: 14),
+        FullWidthButton(
+          label: 'Back to Login',
+          icon: Icons.arrow_back_rounded,
+          onPressed: widget.onBackToLogin,
+          backgroundColor: BcbColors.panelSoft,
+          foregroundColor: Colors.white,
+        ),
+      ],
+    );
+  }
+}
+
+class UploadPlaceholder extends StatelessWidget {
+  final String label;
+
+  const UploadPlaceholder({super.key, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: BcbColors.panelSoft,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: BcbColors.lineDark),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.upload_file_rounded, color: BcbColors.aqua),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const Text('Placeholder', style: TextStyle(color: BcbColors.textSoft)),
+        ],
+      ),
+    );
+  }
+}
+
+class AccountTypeChoice extends StatelessWidget {
+  final String selected;
+  final ValueChanged<String> onSelect;
+
+  const AccountTypeChoice({
+    super.key,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const options = [
+      'Savings Account',
+      'Current Account',
+      'Student Account',
+      'Business Account',
+      'Susu / Group Savings',
+    ];
+
+    return Column(
+      children: options.map((option) {
+        final active = option == selected;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: InkWell(
+            onTap: () => onSelect(option),
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: active ? const Color(0xFF123C3A) : BcbColors.panelSoft,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: active ? const Color(0xFF1D625D) : BcbColors.lineDark,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    active ? Icons.radio_button_checked : Icons.radio_button_off,
+                    color: active ? BcbColors.aqua : BcbColors.textSoft,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      option,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
 }
 
 class BankingShell extends StatefulWidget {
   final VoidCallback onLogout;
+  final DemoCustomerProfile profile;
 
   const BankingShell({
     super.key,
     required this.onLogout,
+    required this.profile,
   });
 
   @override
@@ -677,12 +1061,13 @@ class _BankingShellState extends State<BankingShell> {
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 760;
     final pages = [
-      const DashboardPage(),
-      const TransferPage(),
-      const PaymentsPage(),
-      const CardsPage(),
-      const SavingsPage(),
-      const SupportPage(),
+      DashboardPage(profile: widget.profile),
+      TransferPage(profile: widget.profile),
+      MobileMoneyPage(profile: widget.profile),
+      PaymentsPage(profile: widget.profile),
+      SavingsPage(profile: widget.profile),
+      CardsPage(profile: widget.profile),
+      MorePage(profile: widget.profile),
     ];
 
     return Scaffold(
@@ -786,20 +1171,20 @@ class BcbNavBar extends StatelessWidget {
                         onTap: () => onItemTap(0),
                       ),
                       NavItem(
-                        title: 'Transfer',
+                        title: 'Send Money',
                         icon: Icons.swap_horiz_rounded,
                         selected: selectedIndex == 1,
                         onTap: () => onItemTap(1),
                       ),
                       NavItem(
-                        title: 'Pay Bills',
-                        icon: Icons.receipt_long_rounded,
+                        title: 'MoMo',
+                        icon: Icons.phone_android_rounded,
                         selected: selectedIndex == 2,
                         onTap: () => onItemTap(2),
                       ),
                       NavItem(
-                        title: 'Cards',
-                        icon: Icons.credit_card_rounded,
+                        title: 'Pay Bills',
+                        icon: Icons.receipt_long_rounded,
                         selected: selectedIndex == 3,
                         onTap: () => onItemTap(3),
                       ),
@@ -810,10 +1195,16 @@ class BcbNavBar extends StatelessWidget {
                         onTap: () => onItemTap(4),
                       ),
                       NavItem(
-                        title: 'Support',
-                        icon: Icons.support_agent_rounded,
+                        title: 'Cards',
+                        icon: Icons.credit_card_rounded,
                         selected: selectedIndex == 5,
                         onTap: () => onItemTap(5),
+                      ),
+                      NavItem(
+                        title: 'More',
+                        icon: Icons.dashboard_customize_rounded,
+                        selected: selectedIndex == 6,
+                        onTap: () => onItemTap(6),
                       ),
                     ],
                   ),
@@ -867,7 +1258,7 @@ class BcbNavBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   onSelected: (value) {
-                    if (value == 6) {
+                    if (value == 7) {
                       onLogout();
                     } else {
                       onItemTap(value);
@@ -882,17 +1273,17 @@ class BcbNavBar extends StatelessWidget {
                     _menuItem(
                       value: 1,
                       icon: Icons.swap_horiz_rounded,
-                      text: 'Transfer',
+                      text: 'Send Money',
                     ),
                     _menuItem(
                       value: 2,
-                      icon: Icons.receipt_long_rounded,
-                      text: 'Pay Bills',
+                      icon: Icons.phone_android_rounded,
+                      text: 'MoMo',
                     ),
                     _menuItem(
                       value: 3,
-                      icon: Icons.credit_card_rounded,
-                      text: 'Cards',
+                      icon: Icons.receipt_long_rounded,
+                      text: 'Pay Bills',
                     ),
                     _menuItem(
                       value: 4,
@@ -901,12 +1292,17 @@ class BcbNavBar extends StatelessWidget {
                     ),
                     _menuItem(
                       value: 5,
-                      icon: Icons.support_agent_rounded,
-                      text: 'Support',
+                      icon: Icons.credit_card_rounded,
+                      text: 'Cards',
+                    ),
+                    _menuItem(
+                      value: 6,
+                      icon: Icons.dashboard_customize_rounded,
+                      text: 'More',
                     ),
                     const PopupMenuDivider(),
                     _menuItem(
-                      value: 6,
+                      value: 7,
                       icon: Icons.logout_rounded,
                       text: 'Logout',
                     ),
@@ -1041,7 +1437,9 @@ class NavItem extends StatelessWidget {
 }
 
 class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+  final DemoCustomerProfile profile;
+
+  const DashboardPage({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -1060,7 +1458,7 @@ class DashboardPage extends StatelessWidget {
                 vertical: isMobile ? 0 : 18,
               ),
               child: isMobile
-                  ? const MobileDashboard()
+                  ? MobileDashboard(profile: profile)
                   : const Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1084,7 +1482,9 @@ class DashboardPage extends StatelessWidget {
 }
 
 class MobileDashboard extends StatelessWidget {
-  const MobileDashboard({super.key});
+  final DemoCustomerProfile profile;
+
+  const MobileDashboard({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -1129,21 +1529,21 @@ class MobileDashboard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Good morning,',
                           style: TextStyle(
                             color: BcbColors.textSoft,
                             fontSize: 16,
                           ),
                         ),
-                        SizedBox(height: 6),
+                        const SizedBox(height: 6),
                         Text(
-                          'Demo Customer',
-                          style: TextStyle(
+                          profile.fullName,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 28,
                             fontWeight: FontWeight.w900,
@@ -1158,7 +1558,7 @@ class MobileDashboard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              const GlowingBalanceCard(),
+              GlowingBalanceCard(profile: profile),
               const SizedBox(height: 22),
               const Row(
                 children: [
@@ -1216,13 +1616,67 @@ class MobileDashboard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 28),
-              const Row(
+              Row(
                 children: [
-                  Expanded(child: LargeActionCard(icon: Icons.send_rounded)),
-                  SizedBox(width: 18),
-                  Expanded(child: LargeActionCard(icon: Icons.download_rounded, iconColor: Color(0xFF7AA2FF), iconBg: Color(0xFF182A4B))),
-                  SizedBox(width: 18),
-                  Expanded(child: LargeActionCard(icon: Icons.credit_card_rounded, iconColor: Color(0xFFC084FC), iconBg: Color(0xFF2B1C45))),
+                  Expanded(
+                    child: LargeActionCard(
+                      icon: Icons.send_rounded,
+                      label: 'Send',
+                      onTap: () => _openTask(context, SendMoneyFlowPage(profile: profile)),
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: LargeActionCard(
+                      icon: Icons.phone_android_rounded,
+                      label: 'MoMo',
+                      iconColor: Color(0xFF7AA2FF),
+                      iconBg: Color(0xFF182A4B),
+                      onTap: () => _openTask(context, MobileMoneyFlowPage(profile: profile)),
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: LargeActionCard(
+                      icon: Icons.receipt_long_rounded,
+                      label: 'Bills',
+                      iconColor: Color(0xFFC084FC),
+                      iconBg: Color(0xFF2B1C45),
+                      onTap: () => _openTask(context, BillPaymentFlowPage(profile: profile)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: LargeActionCard(
+                      icon: Icons.savings_rounded,
+                      label: 'Top-up',
+                      iconColor: Color(0xFF4ADE80),
+                      iconBg: Color(0xFF173817),
+                      onTap: () => _openTask(context, SavingsTopUpPage(profile: profile)),
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: LargeActionCard(
+                      icon: Icons.lock_rounded,
+                      label: 'Freeze',
+                      iconColor: Color(0xFFFB923C),
+                      iconBg: Color(0xFF352216),
+                      onTap: () => _openTask(context, FreezeCardPage(profile: profile)),
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: LargeActionCard(
+                      icon: Icons.request_quote_rounded,
+                      label: 'Loan',
+                      onTap: () => _openTask(context, LoanApplicationPage(profile: profile)),
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -1230,6 +1684,10 @@ class MobileDashboard extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  void _openTask(BuildContext context, Widget page) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
   }
 }
 
@@ -1282,7 +1740,9 @@ class HomeIconButton extends StatelessWidget {
 }
 
 class GlowingBalanceCard extends StatelessWidget {
-  const GlowingBalanceCard({super.key});
+  final DemoCustomerProfile profile;
+
+  const GlowingBalanceCard({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -1305,7 +1765,7 @@ class GlowingBalanceCard extends StatelessWidget {
           ),
         ],
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -1315,7 +1775,7 @@ class GlowingBalanceCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'TOTAL BALANCE',
                       style: TextStyle(
                         color: BcbColors.textSoft,
@@ -1326,8 +1786,8 @@ class GlowingBalanceCard extends StatelessWidget {
                     ),
                     SizedBox(height: 6),
                     Text(
-                      'Savings Account - ****4821',
-                      style: TextStyle(
+                      '${profile.accountType} - ****${profile.accountNumber.length >= 4 ? profile.accountNumber.substring(profile.accountNumber.length - 4) : profile.accountNumber}',
+                      style: const TextStyle(
                         color: BcbColors.textSoft,
                         fontSize: 14,
                       ),
@@ -1335,7 +1795,7 @@ class GlowingBalanceCard extends StatelessWidget {
                   ],
                 ),
               ),
-              MiniSquareIcon(
+              const MiniSquareIcon(
                 icon: Icons.remove_red_eye_outlined,
                 iconColor: BcbColors.aqua,
                 bg: Color(0xFF1A2431),
@@ -1345,14 +1805,14 @@ class GlowingBalanceCard extends StatelessWidget {
           SizedBox(height: 28),
           Text(
             'GH¢ 24,850.00',
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 34,
               fontWeight: FontWeight.w900,
             ),
           ),
           SizedBox(height: 24),
-          Row(
+          const Row(
             children: [
               TrendPill(),
               SizedBox(width: 12),
@@ -1463,25 +1923,45 @@ class LargeActionCard extends StatelessWidget {
   final IconData icon;
   final Color iconBg;
   final Color iconColor;
+  final String label;
+  final VoidCallback? onTap;
 
   const LargeActionCard({
     super.key,
     required this.icon,
+    required this.label,
     this.iconBg = const Color(0xFF123C3A),
     this.iconColor = BcbColors.aqua,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 86,
-      decoration: BoxDecoration(
-        color: BcbColors.panelDark,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: BcbColors.lineDark),
-      ),
-      child: Center(
-        child: MiniSquareIcon(icon: icon, iconColor: iconColor, bg: iconBg),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(22),
+      child: Container(
+        height: 86,
+        decoration: BoxDecoration(
+          color: BcbColors.panelDark,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: BcbColors.lineDark),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            MiniSquareIcon(icon: icon, iconColor: iconColor, bg: iconBg),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: BcbColors.textSoft,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1543,7 +2023,8 @@ class MobileBottomNav extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: List.generate(items.length, (index) {
-          final targetIndex = index == 4 ? 5 : index;
+          final pageMap = [0, 1, 2, 5, 6];
+          final targetIndex = pageMap[index];
           final selected = selectedIndex == targetIndex;
           final item = items[index];
           return InkWell(
@@ -2008,7 +2489,9 @@ class ActivityPanel extends StatelessWidget {
 }
 
 class TransferPage extends StatelessWidget {
-  const TransferPage({super.key});
+  final DemoCustomerProfile profile;
+
+  const TransferPage({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -2020,12 +2503,37 @@ class TransferPage extends StatelessWidget {
         left: const TransferFormCard(),
         right: InfoStack(
           title: 'Transfer options',
-          items: const [
-            InfoItem(Icons.account_balance_rounded, 'BCB to BCB', 'Instant transfers within Bawjiase Community Bank.'),
-            InfoItem(Icons.business_rounded, 'Other banks', 'Send to supported bank accounts across Ghana.'),
-            InfoItem(Icons.phone_android_rounded, 'Mobile money', 'Move funds to wallet numbers with reference notes.'),
-            InfoItem(Icons.groups_rounded, 'Saved beneficiaries', 'Reuse trusted accounts and wallets without entering details again.'),
-            InfoItem(Icons.receipt_long_rounded, 'Transfer receipts', 'Download or share proof of payment after each transfer.'),
+          items: [
+            InfoItem(Icons.account_balance_rounded, 'BCB to BCB', 'Instant transfers within Bawjiase Community Bank.', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SendMoneyFlowPage(profile: profile)))),
+            InfoItem(Icons.business_rounded, 'Other banks', 'Send to supported bank accounts across Ghana.', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SendMoneyFlowPage(profile: profile)))),
+            InfoItem(Icons.phone_android_rounded, 'Mobile money', 'Move funds to wallet numbers with reference notes.', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => MobileMoneyFlowPage(profile: profile)))),
+            const InfoItem(Icons.groups_rounded, 'Saved beneficiaries', 'Reuse trusted accounts and wallets without entering details again.'),
+            const InfoItem(Icons.receipt_long_rounded, 'Transfer receipts', 'Download or share proof of payment after each transfer.'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class MobileMoneyPage extends StatelessWidget {
+  final DemoCustomerProfile profile;
+
+  const MobileMoneyPage({super.key, required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return BankingPageScaffold(
+      title: 'Mobile Money',
+      subtitle: 'Send to MTN, Telecel, and AirtelTigo wallets with a simple guided flow.',
+      child: ResponsiveTwo(
+        left: const MobileMoneyFormCard(),
+        right: InfoStack(
+          title: 'MoMo services',
+          items: [
+            InfoItem(Icons.send_to_mobile_rounded, 'Wallet transfer', 'Move funds to a verified mobile money number.', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => MobileMoneyFlowPage(profile: profile)))),
+            InfoItem(Icons.phone_callback_rounded, 'Cash out request', 'Prepare a cash out request from your bank balance.', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => MobileMoneyFlowPage(profile: profile)))),
+            const InfoItem(Icons.people_alt_rounded, 'Saved wallets', 'Reuse trusted wallet numbers for faster transfers.'),
           ],
         ),
       ),
@@ -2034,7 +2542,9 @@ class TransferPage extends StatelessWidget {
 }
 
 class PaymentsPage extends StatelessWidget {
-  const PaymentsPage({super.key});
+  final DemoCustomerProfile profile;
+
+  const PaymentsPage({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -2043,46 +2553,54 @@ class PaymentsPage extends StatelessWidget {
       subtitle:
           'Handle everyday payments from one place and keep receipts neatly attached to your account history.',
       child: ResponsiveThree(
-        children: const [
+        children: [
           BankingServiceCard(
             icon: Icons.lightbulb_rounded,
             title: 'Electricity',
             text: 'Pay ECG bills or buy prepaid power tokens.',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => BillPaymentFlowPage(profile: profile))),
           ),
           BankingServiceCard(
             icon: Icons.water_drop_rounded,
             title: 'Water',
             text: 'Settle water bills using your customer reference.',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => BillPaymentFlowPage(profile: profile))),
           ),
           BankingServiceCard(
             icon: Icons.phone_iphone_rounded,
             title: 'Airtime',
             text: 'Top up your phone or send airtime to someone else.',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => BillPaymentFlowPage(profile: profile))),
           ),
           BankingServiceCard(
             icon: Icons.wifi_rounded,
             title: 'Data',
             text: 'Buy data bundles for supported mobile networks.',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => BillPaymentFlowPage(profile: profile))),
           ),
           BankingServiceCard(
             icon: Icons.school_rounded,
             title: 'School fees',
             text: 'Pay fees with a clear narration for receipts.',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => BillPaymentFlowPage(profile: profile))),
           ),
           BankingServiceCard(
             icon: Icons.qr_code_2_rounded,
             title: 'Merchant pay',
             text: 'Scan or enter a merchant code to complete checkout.',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => BillPaymentFlowPage(profile: profile))),
           ),
           BankingServiceCard(
             icon: Icons.home_work_rounded,
             title: 'Rent',
             text: 'Pay rent and property-related invoices directly from your account.',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => BillPaymentFlowPage(profile: profile))),
           ),
           BankingServiceCard(
             icon: Icons.local_hospital_rounded,
             title: 'Hospital',
             text: 'Cover clinic and hospital bills using your patient reference.',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => BillPaymentFlowPage(profile: profile))),
           ),
         ],
       ),
@@ -2091,7 +2609,9 @@ class PaymentsPage extends StatelessWidget {
 }
 
 class CardsPage extends StatelessWidget {
-  const CardsPage({super.key});
+  final DemoCustomerProfile profile;
+
+  const CardsPage({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -2103,12 +2623,12 @@ class CardsPage extends StatelessWidget {
         left: const BankCardPreview(),
         right: InfoStack(
           title: 'Card controls',
-          items: const [
-            InfoItem(Icons.lock_rounded, 'Freeze card', 'Pause card use immediately if something feels wrong.'),
-            InfoItem(Icons.key_rounded, 'Change PIN', 'Update card PIN through a guided secure flow.'),
-            InfoItem(Icons.payments_rounded, 'Limits', 'Set daily ATM and purchase limits for safer spending.'),
-            InfoItem(Icons.public_rounded, 'Online payments', 'Switch online and international payments on or off.'),
-            InfoItem(Icons.report_gmailerrorred_rounded, 'Lost card', 'Report a missing card and request a replacement fast.'),
+          items: [
+            InfoItem(Icons.lock_rounded, 'Freeze card', 'Pause card use immediately if something feels wrong.', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => FreezeCardPage(profile: profile)))),
+            InfoItem(Icons.key_rounded, 'Change PIN', 'Update card PIN through a guided secure flow.', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CardSettingsPage(profile: profile)))),
+            InfoItem(Icons.payments_rounded, 'Limits', 'Set daily ATM and purchase limits for safer spending.', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CardSettingsPage(profile: profile)))),
+            InfoItem(Icons.public_rounded, 'Online payments', 'Switch online and international payments on or off.', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CardSettingsPage(profile: profile)))),
+            const InfoItem(Icons.report_gmailerrorred_rounded, 'Lost card', 'Report a missing card and request a replacement fast.'),
           ],
         ),
       ),
@@ -2117,7 +2637,9 @@ class CardsPage extends StatelessWidget {
 }
 
 class SavingsPage extends StatelessWidget {
-  const SavingsPage({super.key});
+  final DemoCustomerProfile profile;
+
+  const SavingsPage({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -2126,11 +2648,11 @@ class SavingsPage extends StatelessWidget {
       subtitle:
           'Create targets for school fees, business stock, emergencies, or family plans and track progress at a glance.',
       child: ResponsiveThree(
-        children: const [
-          GoalCard(title: 'Emergency Fund', amount: 'GHS 3,800', percent: 0.76),
-          GoalCard(title: 'School Fees', amount: 'GHS 2,450', percent: 0.49),
-          GoalCard(title: 'Market Stock', amount: 'GHS 6,200', percent: 0.62),
-          GoalCard(title: 'Home Project', amount: 'GHS 4,900', percent: 0.31),
+        children: [
+          GoalCard(title: 'Emergency Fund', amount: 'GHS 3,800', percent: 0.76, onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SavingsTopUpPage(profile: profile)))),
+          GoalCard(title: 'School Fees', amount: 'GHS 2,450', percent: 0.49, onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SavingsTopUpPage(profile: profile)))),
+          GoalCard(title: 'Market Stock', amount: 'GHS 6,200', percent: 0.62, onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SavingsTopUpPage(profile: profile)))),
+          GoalCard(title: 'Home Project', amount: 'GHS 4,900', percent: 0.31, onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SavingsTopUpPage(profile: profile)))),
         ],
       ),
     );
@@ -2177,6 +2699,90 @@ class SupportPage extends StatelessWidget {
             icon: Icons.schedule_rounded,
             title: 'Book visit',
             text: 'Schedule a branch appointment before you arrive.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class MorePage extends StatelessWidget {
+  final DemoCustomerProfile profile;
+
+  const MorePage({super.key, required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return BankingPageScaffold(
+      title: 'More Services',
+      subtitle: 'Open additional BCB tools, support services, and admin review placeholders.',
+      child: Column(
+        children: [
+          SurfaceCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Profile',
+                  style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 14),
+                Text('Name: ${profile.fullName}', style: const TextStyle(color: BcbColors.textSoft)),
+                const SizedBox(height: 8),
+                Text('Account: ${profile.accountNumber}', style: const TextStyle(color: BcbColors.textSoft)),
+                const SizedBox(height: 8),
+                Text('Phone: ${profile.phoneNumber}', style: const TextStyle(color: BcbColors.textSoft)),
+                const SizedBox(height: 8),
+                Text('Account type: ${profile.accountType}', style: const TextStyle(color: BcbColors.textSoft)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          ResponsiveThree(
+            children: [
+          BankingServiceCard(
+            icon: Icons.request_quote_rounded,
+            title: 'Loan Application',
+            text: 'Submit a demo loan application with amount, purpose, and repayment plan.',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => LoanApplicationPage(profile: profile)),
+            ),
+          ),
+          BankingServiceCard(
+            icon: Icons.lock_rounded,
+            title: 'Freeze Card',
+            text: 'Temporarily lock a card when you want stronger account control.',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => FreezeCardPage(profile: profile)),
+            ),
+          ),
+          BankingServiceCard(
+            icon: Icons.tune_rounded,
+            title: 'Card Settings',
+            text: 'Adjust online payments, ATM access, and daily spending limits.',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => CardSettingsPage(profile: profile)),
+            ),
+          ),
+          BankingServiceCard(
+            icon: Icons.admin_panel_settings_rounded,
+            title: 'Admin Panel',
+            text: 'Preview the bank staff review dashboard for KYC, loans, tickets, and disputes.',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AdminBackOfficePage()),
+            ),
+          ),
+          const BankingServiceCard(
+            icon: Icons.verified_user_rounded,
+            title: 'Real Backend Next',
+            text: 'Firebase, Supabase, or a custom backend will replace demo-only local data.',
+          ),
+          const BankingServiceCard(
+            icon: Icons.shield_moon_rounded,
+            title: 'Public Launch Next',
+            text: 'Real OTP, role security, integrations, audit logs, and fraud checks come after demo completion.',
+          ),
+            ],
           ),
         ],
       ),
@@ -2320,6 +2926,450 @@ class LoginCard extends StatelessWidget {
           BankingField(icon: Icons.lock_rounded, hint: 'Enter secure PIN', obscure: true),
           SizedBox(height: 22),
           FullWidthButton(label: 'Login Securely', icon: Icons.lock_open_rounded),
+        ],
+      ),
+    );
+  }
+}
+
+class MobileMoneyFormCard extends StatelessWidget {
+  const MobileMoneyFormCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SurfaceCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text(
+            'Mobile money transfer',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 18),
+          FieldLabel('Wallet number'),
+          SizedBox(height: 8),
+          BankingField(icon: Icons.phone_android_rounded, hint: '0241234567'),
+          SizedBox(height: 16),
+          FieldLabel('Network'),
+          SizedBox(height: 8),
+          BankingField(icon: Icons.network_cell_rounded, hint: 'MTN / Telecel / AirtelTigo'),
+          SizedBox(height: 16),
+          FieldLabel('Amount'),
+          SizedBox(height: 8),
+          BankingField(icon: Icons.payments_rounded, hint: 'GHS 0.00'),
+          SizedBox(height: 22),
+          FullWidthButton(label: 'Review MoMo Transfer', icon: Icons.check_circle_rounded),
+        ],
+      ),
+    );
+  }
+}
+
+class TaskFlowPage extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final DemoCustomerProfile profile;
+  final List<Widget> body;
+
+  const TaskFlowPage({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.profile,
+    required this.body,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: BcbColors.appDark,
+      appBar: AppBar(
+        backgroundColor: BcbColors.appDark,
+        foregroundColor: Colors.white,
+        title: Text(title),
+      ),
+      body: BankingPageScaffold(
+        title: title,
+        subtitle: subtitle,
+        child: Column(
+          children: body
+              .expand((widget) => [widget, const SizedBox(height: 18)])
+              .toList()
+            ..removeLast(),
+        ),
+      ),
+    );
+  }
+}
+
+class SendMoneyFlowPage extends StatelessWidget {
+  final DemoCustomerProfile profile;
+
+  const SendMoneyFlowPage({super.key, required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return TaskFlowPage(
+      title: 'Send Money',
+      subtitle: 'Transfer funds from ${profile.accountNumber} with demo confirmation and receipt.',
+      profile: profile,
+      body: [
+        const TransferFormCard(),
+        DemoReceiptCard(
+          title: 'Transfer receipt',
+          lines: [
+            'Customer: ${profile.fullName}',
+            'From account: ${profile.accountNumber}',
+            'PIN approval: ${profile.transactionPin}',
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class MobileMoneyFlowPage extends StatelessWidget {
+  final DemoCustomerProfile profile;
+
+  const MobileMoneyFlowPage({super.key, required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return TaskFlowPage(
+      title: 'Mobile Money',
+      subtitle: 'Demo transfer to a mobile wallet with the registered customer profile.',
+      profile: profile,
+      body: [
+        const MobileMoneyFormCard(),
+        DemoReceiptCard(
+          title: 'Wallet receipt',
+          lines: [
+            'Customer: ${profile.fullName}',
+            'Phone: ${profile.phoneNumber}',
+            'Account type: ${profile.accountType}',
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class BillPaymentFlowPage extends StatelessWidget {
+  final DemoCustomerProfile profile;
+
+  const BillPaymentFlowPage({super.key, required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return TaskFlowPage(
+      title: 'Pay Bills',
+      subtitle: 'Select a bill category and complete a demo payment from your BCB account.',
+      profile: profile,
+      body: const [
+        BillPaymentCard(),
+      ],
+    );
+  }
+}
+
+class SavingsTopUpPage extends StatelessWidget {
+  final DemoCustomerProfile profile;
+
+  const SavingsTopUpPage({super.key, required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return TaskFlowPage(
+      title: 'Savings Top-up',
+      subtitle: 'Top up your ${profile.accountType} with a quick transfer into your savings goal.',
+      profile: profile,
+      body: [
+        const SavingsTopUpCard(),
+        DemoReceiptCard(
+          title: 'Savings confirmation',
+          lines: [
+            'Depositor: ${profile.fullName}',
+            'Account: ${profile.accountNumber}',
+            'PIN ready: ${profile.transactionPin}',
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class FreezeCardPage extends StatelessWidget {
+  final DemoCustomerProfile profile;
+
+  const FreezeCardPage({super.key, required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return TaskFlowPage(
+      title: 'Freeze Card',
+      subtitle: 'Pause your card instantly in demo mode and keep account access active.',
+      profile: profile,
+      body: const [
+        ToggleActionCard(
+          title: 'Card safety switch',
+          description: 'Disable card usage for ATM, POS, and online payments until you unfreeze it.',
+          buttonLabel: 'Freeze Card',
+          icon: Icons.lock_rounded,
+        ),
+      ],
+    );
+  }
+}
+
+class CardSettingsPage extends StatelessWidget {
+  final DemoCustomerProfile profile;
+
+  const CardSettingsPage({super.key, required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return TaskFlowPage(
+      title: 'Card Settings',
+      subtitle: 'Change spending controls and card permissions for demo testing.',
+      profile: profile,
+      body: const [
+        ToggleActionCard(
+          title: 'Online payments',
+          description: 'Turn e-commerce transactions on or off.',
+          buttonLabel: 'Update Online Access',
+          icon: Icons.public_rounded,
+        ),
+        ToggleActionCard(
+          title: 'ATM withdrawals',
+          description: 'Adjust ATM withdrawals and spending limits.',
+          buttonLabel: 'Change ATM Settings',
+          icon: Icons.atm_rounded,
+        ),
+      ],
+    );
+  }
+}
+
+class LoanApplicationPage extends StatelessWidget {
+  final DemoCustomerProfile profile;
+
+  const LoanApplicationPage({super.key, required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return TaskFlowPage(
+      title: 'Loan Application',
+      subtitle: 'Submit a loan request using your registered BCB customer details.',
+      profile: profile,
+      body: [
+        const LoanApplicationCard(),
+        DemoReceiptCard(
+          title: 'Application submitted',
+          lines: [
+            'Applicant: ${profile.fullName}',
+            'Account: ${profile.accountNumber}',
+            'Review queue: Back-office demo panel',
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class AdminBackOfficePage extends StatelessWidget {
+  const AdminBackOfficePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: BcbColors.appDark,
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Admin / Back-office',
+                style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900),
+              ),
+              SizedBox(height: 18),
+              Expanded(
+                child: ResponsiveThree(
+                  children: [
+                    BankingServiceCard(icon: Icons.badge_rounded, title: 'New Accounts', text: 'Review customer onboarding and KYC submissions.'),
+                    BankingServiceCard(icon: Icons.request_quote_rounded, title: 'Loan Queue', text: 'Review submitted loan applications and statuses.'),
+                    BankingServiceCard(icon: Icons.support_agent_rounded, title: 'Support Tickets', text: 'View and respond to support requests and disputes.'),
+                    BankingServiceCard(icon: Icons.report_problem_rounded, title: 'Disputed Transactions', text: 'Track suspicious or disputed customer activity.'),
+                    BankingServiceCard(icon: Icons.verified_user_rounded, title: 'KYC Status', text: 'Approve or reject uploaded verification details.'),
+                    BankingServiceCard(icon: Icons.analytics_rounded, title: 'Export Reports', text: 'Generate internal reports and dashboard summaries.'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class BillPaymentCard extends StatelessWidget {
+  const BillPaymentCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SurfaceCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text('Bill payment', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900)),
+          SizedBox(height: 18),
+          FieldLabel('Bill type'),
+          SizedBox(height: 8),
+          BankingField(icon: Icons.receipt_long_rounded, hint: 'Electricity / Water / TV / School Fees'),
+          SizedBox(height: 16),
+          FieldLabel('Reference'),
+          SizedBox(height: 8),
+          BankingField(icon: Icons.confirmation_number_rounded, hint: 'Customer reference'),
+          SizedBox(height: 16),
+          FieldLabel('Amount'),
+          SizedBox(height: 8),
+          BankingField(icon: Icons.payments_rounded, hint: 'GHS 0.00'),
+          SizedBox(height: 22),
+          FullWidthButton(label: 'Pay Bill', icon: Icons.check_circle_rounded),
+        ],
+      ),
+    );
+  }
+}
+
+class SavingsTopUpCard extends StatelessWidget {
+  const SavingsTopUpCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SurfaceCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text('Savings top-up', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900)),
+          SizedBox(height: 18),
+          FieldLabel('Savings goal'),
+          SizedBox(height: 8),
+          BankingField(icon: Icons.savings_rounded, hint: 'Emergency Fund / School Fees / Home Project'),
+          SizedBox(height: 16),
+          FieldLabel('Amount'),
+          SizedBox(height: 8),
+          BankingField(icon: Icons.payments_rounded, hint: 'GHS 0.00'),
+          SizedBox(height: 16),
+          FieldLabel('Narration'),
+          SizedBox(height: 8),
+          BankingField(icon: Icons.note_alt_rounded, hint: 'Savings top-up note'),
+          SizedBox(height: 22),
+          FullWidthButton(label: 'Top Up Savings', icon: Icons.arrow_circle_up_rounded),
+        ],
+      ),
+    );
+  }
+}
+
+class ToggleActionCard extends StatelessWidget {
+  final String title;
+  final String description;
+  final String buttonLabel;
+  final IconData icon;
+
+  const ToggleActionCard({
+    super.key,
+    required this.title,
+    required this.description,
+    required this.buttonLabel,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SurfaceCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              MiniSquareIcon(icon: icon, iconColor: BcbColors.aqua, bg: const Color(0xFF123C3A)),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(description, style: const TextStyle(color: BcbColors.textSoft, height: 1.6)),
+          const SizedBox(height: 20),
+          FullWidthButton(label: buttonLabel, icon: Icons.check_circle_rounded),
+        ],
+      ),
+    );
+  }
+}
+
+class LoanApplicationCard extends StatelessWidget {
+  const LoanApplicationCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SurfaceCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text('Loan request', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900)),
+          SizedBox(height: 18),
+          FieldLabel('Loan amount'),
+          SizedBox(height: 8),
+          BankingField(icon: Icons.request_quote_rounded, hint: 'GHS 0.00'),
+          SizedBox(height: 16),
+          FieldLabel('Purpose'),
+          SizedBox(height: 8),
+          BankingField(icon: Icons.description_rounded, hint: 'Business stock / school fees / emergency'),
+          SizedBox(height: 16),
+          FieldLabel('Repayment period'),
+          SizedBox(height: 8),
+          BankingField(icon: Icons.schedule_rounded, hint: '6 months / 12 months'),
+          SizedBox(height: 22),
+          FullWidthButton(label: 'Submit Loan Application', icon: Icons.send_rounded),
+        ],
+      ),
+    );
+  }
+}
+
+class DemoReceiptCard extends StatelessWidget {
+  final String title;
+  final List<String> lines;
+
+  const DemoReceiptCard({super.key, required this.title, required this.lines});
+
+  @override
+  Widget build(BuildContext context) {
+    return SurfaceCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 14),
+          ...lines.map(
+            (line) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(line, style: const TextStyle(color: BcbColors.textSoft)),
+            ),
+          ),
         ],
       ),
     );
@@ -2657,43 +3707,49 @@ class BankingServiceCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String text;
+  final VoidCallback? onTap;
 
   const BankingServiceCard({
     super.key,
     required this.icon,
     required this.title,
     required this.text,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SurfaceCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: BcbColors.primarySoft,
-            child: Icon(icon, color: BcbColors.primary, size: 27),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(22),
+      child: SurfaceCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: BcbColors.primarySoft,
+              child: Icon(icon, color: BcbColors.primary, size: 27),
             ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            text,
-            style: const TextStyle(
-              color: BcbColors.textSoft,
-              height: 1.7,
+            const SizedBox(height: 18),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 10),
+            Text(
+              text,
+              style: const TextStyle(
+                color: BcbColors.textSoft,
+                height: 1.7,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2735,12 +3791,13 @@ class InfoItem extends StatelessWidget {
   final IconData icon;
   final String title;
   final String text;
+  final VoidCallback? onTap;
 
-  const InfoItem(this.icon, this.title, this.text, {super.key});
+  const InfoItem(this.icon, this.title, this.text, {super.key, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final content = Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2777,6 +3834,13 @@ class InfoItem extends StatelessWidget {
         ],
       ),
     );
+    return onTap == null
+        ? content
+        : InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(18),
+            child: content,
+          );
   }
 }
 
@@ -2784,17 +3848,22 @@ class GoalCard extends StatelessWidget {
   final String title;
   final String amount;
   final double percent;
+  final VoidCallback? onTap;
 
   const GoalCard({
     super.key,
     required this.title,
     required this.amount,
     required this.percent,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SurfaceCard(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(22),
+      child: SurfaceCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2843,6 +3912,7 @@ class GoalCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
