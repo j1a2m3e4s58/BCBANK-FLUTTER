@@ -692,7 +692,7 @@ class _RegisterFormState extends State<RegisterForm> {
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: BcbColors.lineDark),
           ),
-          child: const Column(
+          child: Column(
             children: [
               Row(
                 children: [
