@@ -40,6 +40,13 @@ class BcbColors {
   static const canvas = Color(0xFFF5F8F3);
   static const card = Colors.white;
   static const field = Color(0xFFF8FBF7);
+  static const appDark = Color(0xFF0D0F14);
+  static const panelDark = Color(0xFF171A22);
+  static const panelSoft = Color(0xFF1C202A);
+  static const lineDark = Color(0xFF262B35);
+  static const textSoft = Color(0xFF8E94A6);
+  static const aqua = Color(0xFF2DD4CB);
+  static const warning = Color(0xFF2C2718);
 }
 
 class BcbAuthGate extends StatefulWidget {
@@ -90,6 +97,7 @@ class BcbSplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
+      backgroundColor: BcbColors.appDark,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -97,19 +105,19 @@ class BcbSplashScreen extends StatelessWidget {
             BouncingLogo(size: 150),
             SizedBox(height: 24),
             Text(
-              'BCB Mobile Banking',
+              'Bawjiase Community Bank',
               style: TextStyle(
-                color: BcbColors.primaryDark,
-                fontSize: 28,
+                color: Colors.white,
+                fontSize: 22,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0,
               ),
             ),
             SizedBox(height: 8),
             Text(
-              'Bawjiase Community Bank',
+              'Secure mobile banking demo',
               style: TextStyle(
-                color: BcbColors.muted,
+                color: BcbColors.textSoft,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -168,11 +176,10 @@ class _BouncingLogoState extends State<BouncingLogo>
       child: Container(
         width: widget.size,
         height: widget.size,
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: BcbColors.border),
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(widget.size / 2),
           boxShadow: const [
             BoxShadow(
               color: Color(0x22008A2E),
@@ -204,50 +211,56 @@ class _AuthStartPageState extends State<AuthStartPage> {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final isMobile = width < 920;
-
     return Scaffold(
+      backgroundColor: BcbColors.appDark,
       body: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1180),
+            constraints: const BoxConstraints(maxWidth: 560),
             child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 18 : 24,
-                vertical: 26,
-              ),
-              child: isMobile
-                  ? Column(
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
+              child: Column(
+                children: [
+                  const SizedBox(height: 8),
+                  const SizedBox(
+                    width: double.infinity,
+                    child: Column(
                       children: [
-                        const AuthBrandPanel(),
-                        const SizedBox(height: 22),
-                        AuthPanel(
-                          isRegister: isRegister,
-                          onToggle: () {
-                            setState(() => isRegister = !isRegister);
-                          },
-                          onAuthenticated: widget.onAuthenticated,
+                        SizedBox(height: 10),
+                        BouncingLogo(size: 108),
+                        SizedBox(height: 24),
+                        Text(
+                          'Bawjiase Community Bank',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
-                      ],
-                    )
-                  : Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const Expanded(flex: 5, child: AuthBrandPanel()),
-                        const SizedBox(width: 26),
-                        Expanded(
-                          flex: 4,
-                          child: AuthPanel(
-                            isRegister: isRegister,
-                            onToggle: () {
-                              setState(() => isRegister = !isRegister);
-                            },
-                            onAuthenticated: widget.onAuthenticated,
+                        SizedBox(height: 8),
+                        Text(
+                          'Secure mobile banking demo',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: BcbColors.textSoft,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
                     ),
+                  ),
+                  const SizedBox(height: 26),
+                  AuthPanel(
+                    isRegister: isRegister,
+                    onToggle: () {
+                      setState(() => isRegister = !isRegister);
+                    },
+                    onAuthenticated: widget.onAuthenticated,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -261,54 +274,7 @@ class AuthBrandPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(34),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [BcbColors.primaryDeep, BcbColors.primary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x26008A2E),
-            blurRadius: 28,
-            offset: Offset(0, 16),
-          ),
-        ],
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(child: BouncingLogo(size: 142)),
-          SizedBox(height: 32),
-          Text(
-            'Bank safely with BCB.',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 44,
-              height: 1.08,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0,
-            ),
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Login or register first, then continue into the demo mobile banking dashboard.',
-            style: TextStyle(
-              color: Color(0xFFE9FFF0),
-              fontSize: 16,
-              height: 1.7,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: 24),
-          DemoNotice(),
-        ],
-      ),
-    );
+    return const SizedBox.shrink();
   }
 }
 
@@ -360,34 +326,34 @@ class AuthPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SurfaceCard(
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(26),
+      decoration: BoxDecoration(
+        color: BcbColors.panelDark,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: BcbColors.lineDark),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x66000000),
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: AuthTabButton(
-                  label: 'Login',
-                  selected: !isRegister,
-                  onTap: isRegister ? onToggle : () {},
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: AuthTabButton(
-                  label: 'Register',
-                  selected: isRegister,
-                  onTap: isRegister ? () {} : onToggle,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
           if (isRegister)
-            RegisterForm(onAuthenticated: onAuthenticated)
+            RegisterForm(
+              onAuthenticated: onAuthenticated,
+              onSwitchToLogin: onToggle,
+            )
           else
-            DemoLoginForm(onAuthenticated: onAuthenticated),
+            DemoLoginForm(
+              onAuthenticated: onAuthenticated,
+              onSwitchToRegister: onToggle,
+            ),
         ],
       ),
     );
@@ -413,16 +379,16 @@ class AuthTabButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(14),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? BcbColors.primary : BcbColors.primarySoft,
+          color: selected ? BcbColors.aqua : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Text(
           label,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: selected ? Colors.white : BcbColors.primaryDark,
+            color: selected ? BcbColors.appDark : BcbColors.textSoft,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -433,10 +399,12 @@ class AuthTabButton extends StatelessWidget {
 
 class DemoLoginForm extends StatefulWidget {
   final VoidCallback onAuthenticated;
+  final VoidCallback onSwitchToRegister;
 
   const DemoLoginForm({
     super.key,
     required this.onAuthenticated,
+    required this.onSwitchToRegister,
   });
 
   @override
@@ -460,40 +428,77 @@ class _DemoLoginFormState extends State<DemoLoginForm> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Customer login',
+          'Login',
           style: TextStyle(
-            color: BcbColors.dark,
+            color: Colors.white,
             fontSize: 30,
             fontWeight: FontWeight.w900,
           ),
         ),
         const SizedBox(height: 8),
         const Text(
-          'Use your account number and password to enter BCB Mobile.',
-          style: TextStyle(color: BcbColors.muted, height: 1.6),
+          'Use any account number and password for demo testing.',
+          style: TextStyle(color: BcbColors.textSoft, height: 1.6),
         ),
         const SizedBox(height: 22),
-        const FieldLabel('Account Number'),
+        const AuthFieldLabel('Account Number'),
         const SizedBox(height: 8),
-        BankingField(
+        AuthField(
           controller: accountController,
-          icon: Icons.account_balance_wallet_rounded,
-          hint: 'Enter account number',
+          icon: Icons.person_outline_rounded,
+          hint: '0012345678',
         ),
         const SizedBox(height: 16),
-        const FieldLabel('Password'),
+        const AuthFieldLabel('Password'),
         const SizedBox(height: 8),
-        BankingField(
+        AuthField(
           controller: passwordController,
-          icon: Icons.lock_rounded,
+          icon: Icons.lock_outline_rounded,
           hint: 'Enter password',
           obscure: true,
         ),
         const SizedBox(height: 22),
         FullWidthButton(
-          label: 'Login to Demo',
-          icon: Icons.lock_open_rounded,
+          label: 'Login',
+          icon: Icons.login_rounded,
           onPressed: widget.onAuthenticated,
+          backgroundColor: BcbColors.aqua,
+          foregroundColor: BcbColors.appDark,
+        ),
+        const SizedBox(height: 22),
+        Center(
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              const Text(
+                'New customer? ',
+                style: TextStyle(color: BcbColors.textSoft, fontSize: 15),
+              ),
+              GestureDetector(
+                onTap: widget.onSwitchToRegister,
+                child: const Text(
+                  'Register for demo access',
+                  style: TextStyle(
+                    color: BcbColors.aqua,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        const Center(
+          child: Text(
+            'Forgot password?',
+            style: TextStyle(
+              color: BcbColors.aqua,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
         ),
       ],
     );
@@ -502,10 +507,12 @@ class _DemoLoginFormState extends State<DemoLoginForm> {
 
 class RegisterForm extends StatefulWidget {
   final VoidCallback onAuthenticated;
+  final VoidCallback onSwitchToLogin;
 
   const RegisterForm({
     super.key,
     required this.onAuthenticated,
+    required this.onSwitchToLogin,
   });
 
   @override
@@ -531,48 +538,120 @@ class _RegisterFormState extends State<RegisterForm> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Register account',
+          'Open Your BCB Account',
           style: TextStyle(
-            color: BcbColors.dark,
+            color: Colors.white,
             fontSize: 30,
             fontWeight: FontWeight.w900,
           ),
         ),
         const SizedBox(height: 8),
         const Text(
-          'Create demo access for a BCB customer account.',
-          style: TextStyle(color: BcbColors.muted, height: 1.6),
+          'Demo onboarding accepts any valid-looking details.',
+          style: TextStyle(color: BcbColors.textSoft, height: 1.6),
         ),
         const SizedBox(height: 22),
-        const FieldLabel('Account Number'),
-        const SizedBox(height: 8),
-        BankingField(
-          controller: accountController,
-          icon: Icons.account_balance_rounded,
-          hint: 'Enter BCB account number',
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: BcbColors.panelSoft,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: BcbColors.lineDark),
+          ),
+          child: const Column(
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'Step 1 of 6',
+                    style: TextStyle(color: BcbColors.textSoft, fontSize: 14),
+                  ),
+                  Spacer(),
+                  Text(
+                    '17%',
+                    style: TextStyle(color: BcbColors.textSoft, fontSize: 14),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.all(Radius.circular(999)),
+                child: LinearProgressIndicator(
+                  value: 0.17,
+                  minHeight: 8,
+                  backgroundColor: BcbColors.lineDark,
+                  valueColor: AlwaysStoppedAnimation(BcbColors.aqua),
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 16),
-        const FieldLabel('Phone Number'),
-        const SizedBox(height: 8),
-        BankingField(
+        const SizedBox(height: 22),
+        Row(
+          children: [
+            Container(
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                color: const Color(0xFF123C3A),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFF1D625D)),
+              ),
+              child: const Icon(Icons.person_outline_rounded, color: BcbColors.aqua),
+            ),
+            const SizedBox(width: 14),
+            const Text(
+              'Customer Details',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        AuthField(
           controller: phoneController,
-          icon: Icons.phone_rounded,
-          hint: 'Enter phone number',
+          hint: 'Full legal name',
         ),
         const SizedBox(height: 16),
-        const FieldLabel('Password'),
-        const SizedBox(height: 8),
-        BankingField(
+        AuthField(
+          controller: accountController,
+          hint: 'Account number',
+        ),
+        const SizedBox(height: 16),
+        AuthField(
+          controller: phoneController,
+          hint: 'Phone number e.g. 0241234567',
+        ),
+        const SizedBox(height: 16),
+        AuthField(
           controller: passwordController,
-          icon: Icons.lock_rounded,
           hint: 'Create password',
           obscure: true,
         ),
+        const SizedBox(height: 8),
         const SizedBox(height: 22),
         FullWidthButton(
-          label: 'Create Demo Account',
-          icon: Icons.person_add_alt_1_rounded,
+          label: 'Continue',
+          icon: Icons.arrow_forward_rounded,
           onPressed: widget.onAuthenticated,
+          backgroundColor: BcbColors.aqua,
+          foregroundColor: BcbColors.appDark,
+        ),
+        const SizedBox(height: 20),
+        Center(
+          child: GestureDetector(
+            onTap: widget.onSwitchToLogin,
+            child: const Text(
+              'Already registered? Login',
+              style: TextStyle(
+                color: BcbColors.textSoft,
+                fontSize: 15,
+              ),
+            ),
+          ),
         ),
       ],
     );
@@ -596,6 +675,7 @@ class _BankingShellState extends State<BankingShell> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 760;
     final pages = [
       const DashboardPage(),
       const TransferPage(),
@@ -606,14 +686,21 @@ class _BankingShellState extends State<BankingShell> {
     ];
 
     return Scaffold(
+      backgroundColor: BcbColors.appDark,
       body: Column(
         children: [
-          BcbNavBar(
-            selectedIndex: selectedPage,
-            onItemTap: (index) => setState(() => selectedPage = index),
-            onLogout: widget.onLogout,
-          ),
+          if (!isMobile)
+            BcbNavBar(
+              selectedIndex: selectedPage,
+              onItemTap: (index) => setState(() => selectedPage = index),
+              onLogout: widget.onLogout,
+            ),
           Expanded(child: pages[selectedPage]),
+          if (isMobile)
+            MobileBottomNav(
+              selectedIndex: selectedPage,
+              onItemTap: (index) => setState(() => selectedPage = index),
+            ),
         ],
       ),
     );
@@ -962,32 +1049,536 @@ class DashboardPage extends StatelessWidget {
     final isMobile = width < 760;
 
     return SingleChildScrollView(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1320),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 14 : 22,
-              vertical: isMobile ? 10 : 18,
+      child: Container(
+        color: BcbColors.appDark,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1320),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 0 : 22,
+                vertical: isMobile ? 0 : 18,
+              ),
+              child: isMobile
+                  ? const MobileDashboard()
+                  : const Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 5,
+                          child: BankingHero(),
+                        ),
+                        SizedBox(width: 24),
+                        Expanded(
+                          flex: 4,
+                          child: ActivityPanel(),
+                        ),
+                      ],
+                    ),
             ),
-            child: isMobile
-                ? const PhonePreview()
-                : const Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 5,
-                        child: BankingHero(),
-                      ),
-                      SizedBox(width: 24),
-                      Expanded(
-                        flex: 4,
-                        child: ActivityPanel(),
-                      ),
-                    ],
-                  ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class MobileDashboard extends StatelessWidget {
+  const MobileDashboard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 14),
+          decoration: const BoxDecoration(
+            color: BcbColors.warning,
+            border: Border(
+              top: BorderSide(color: BcbColors.primary, width: 2),
+              bottom: BorderSide(color: Color(0x66483C1A)),
+            ),
+          ),
+          child: const Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(top: 2),
+                child: Icon(Icons.warning_amber_rounded, color: Color(0xFFF0D072), size: 18),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Demo mode: login accepts any account number and password.\nTransactions are test data only.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFFF0D072),
+                    fontWeight: FontWeight.w700,
+                    height: 1.45,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Good morning,',
+                          style: TextStyle(
+                            color: BcbColors.textSoft,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 6),
+                        Text(
+                          'Demo Customer',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const HomeIconButton(icon: Icons.history_rounded),
+                  const SizedBox(width: 12),
+                  const HomeIconButton(icon: Icons.notifications_none_rounded, badge: '2'),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const GlowingBalanceCard(),
+              const SizedBox(height: 22),
+              const Row(
+                children: [
+                  Expanded(
+                    child: OverviewMetricCard(
+                      title: 'Income',
+                      amount: 'GH¢ 5,745.20',
+                      delta: 'Up +12%',
+                      deltaColor: Color(0xFF4ADE80),
+                      icon: Icons.trending_up_rounded,
+                      iconBg: Color(0xFF103B37),
+                      iconColor: BcbColors.aqua,
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: OverviewMetricCard(
+                      title: 'Expenses',
+                      amount: 'GH¢ 2,039.50',
+                      delta: 'Down -8%',
+                      deltaColor: Color(0xFFF87171),
+                      icon: Icons.show_chart_rounded,
+                      iconBg: Color(0xFF182A4B),
+                      iconColor: Color(0xFF7AA2FF),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Row(
+                children: [
+                  Expanded(
+                    child: OverviewMetricCard(
+                      title: 'Balance',
+                      amount: 'GH¢ 24,850.00',
+                      delta: 'Up +5%',
+                      deltaColor: Color(0xFF4ADE80),
+                      icon: Icons.account_balance_wallet_outlined,
+                      iconBg: Color(0xFF2B1C45),
+                      iconColor: Color(0xFFC084FC),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: OverviewMetricCard(
+                      title: 'Invested',
+                      amount: 'GH¢ 3,200',
+                      delta: 'Up +18%',
+                      deltaColor: Color(0xFF4ADE80),
+                      icon: Icons.savings_outlined,
+                      iconBg: Color(0xFF3C2613),
+                      iconColor: Color(0xFFFB923C),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 28),
+              const Row(
+                children: [
+                  Expanded(child: LargeActionCard(icon: Icons.send_rounded)),
+                  SizedBox(width: 18),
+                  Expanded(child: LargeActionCard(icon: Icons.download_rounded, iconColor: Color(0xFF7AA2FF), iconBg: Color(0xFF182A4B))),
+                  SizedBox(width: 18),
+                  Expanded(child: LargeActionCard(icon: Icons.credit_card_rounded, iconColor: Color(0xFFC084FC), iconBg: Color(0xFF2B1C45))),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class HomeIconButton extends StatelessWidget {
+  final IconData icon;
+  final String? badge;
+
+  const HomeIconButton({super.key, required this.icon, this.badge});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 62,
+          height: 62,
+          decoration: BoxDecoration(
+            color: BcbColors.panelDark,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: BcbColors.lineDark),
+          ),
+          child: Icon(icon, color: const Color(0xFFA2A8BA), size: 28),
+        ),
+        if (badge != null)
+          Positioned(
+            right: -3,
+            top: -3,
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: const BoxDecoration(
+                color: BcbColors.aqua,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  badge!,
+                  style: const TextStyle(
+                    color: BcbColors.appDark,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class GlowingBalanceCard extends StatelessWidget {
+  const GlowingBalanceCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(26),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF10292B), Color(0xFF111722)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: const Color(0xFF155954)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x4400C090),
+            blurRadius: 30,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'TOTAL BALANCE',
+                      style: TextStyle(
+                        color: BcbColors.textSoft,
+                        fontSize: 14,
+                        letterSpacing: 0.8,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Savings Account - ****4821',
+                      style: TextStyle(
+                        color: BcbColors.textSoft,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              MiniSquareIcon(
+                icon: Icons.remove_red_eye_outlined,
+                iconColor: BcbColors.aqua,
+                bg: Color(0xFF1A2431),
+              ),
+            ],
+          ),
+          SizedBox(height: 28),
+          Text(
+            'GH¢ 24,850.00',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 34,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          SizedBox(height: 24),
+          Row(
+            children: [
+              TrendPill(),
+              SizedBox(width: 12),
+              Text(
+                'vs last month',
+                style: TextStyle(
+                  color: BcbColors.textSoft,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TrendPill extends StatelessWidget {
+  const TrendPill({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF163C38),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF1D625D)),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.trending_up_rounded, color: BcbColors.aqua, size: 18),
+          SizedBox(width: 6),
+          Text(
+            '+12.5%',
+            style: TextStyle(
+              color: BcbColors.aqua,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class OverviewMetricCard extends StatelessWidget {
+  final String title;
+  final String amount;
+  final String delta;
+  final Color deltaColor;
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+
+  const OverviewMetricCard({
+    super.key,
+    required this.title,
+    required this.amount,
+    required this.delta,
+    required this.deltaColor,
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: BcbColors.panelDark,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: BcbColors.lineDark),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          MiniSquareIcon(icon: icon, iconColor: iconColor, bg: iconBg),
+          const SizedBox(height: 26),
+          Text(title, style: const TextStyle(color: BcbColors.textSoft, fontSize: 15)),
+          const SizedBox(height: 10),
+          Text(
+            amount,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 21,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            delta,
+            style: TextStyle(
+              color: deltaColor,
+              fontSize: 15,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class LargeActionCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+
+  const LargeActionCard({
+    super.key,
+    required this.icon,
+    this.iconBg = const Color(0xFF123C3A),
+    this.iconColor = BcbColors.aqua,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 108,
+      decoration: BoxDecoration(
+        color: BcbColors.panelDark,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: BcbColors.lineDark),
+      ),
+      child: Center(
+        child: MiniSquareIcon(icon: icon, iconColor: iconColor, bg: iconBg),
+      ),
+    );
+  }
+}
+
+class MiniSquareIcon extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final Color bg;
+
+  const MiniSquareIcon({
+    super.key,
+    required this.icon,
+    required this.iconColor,
+    required this.bg,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: bg.withOpacity(0.7)),
+      ),
+      child: Icon(icon, color: iconColor, size: 24),
+    );
+  }
+}
+
+class MobileBottomNav extends StatelessWidget {
+  final int selectedIndex;
+  final ValueChanged<int> onItemTap;
+
+  const MobileBottomNav({
+    super.key,
+    required this.selectedIndex,
+    required this.onItemTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const items = [
+      (Icons.grid_view_rounded, 'Home'),
+      (Icons.swap_horiz_rounded, 'Transfer'),
+      (Icons.phone_android_rounded, 'MoMo'),
+      (Icons.credit_card_rounded, 'Cards'),
+      (Icons.grid_on_rounded, 'More'),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 18),
+      decoration: const BoxDecoration(
+        color: Color(0xFF13161D),
+        border: Border(top: BorderSide(color: BcbColors.lineDark)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: List.generate(items.length, (index) {
+          final targetIndex = index == 4 ? 5 : index;
+          final selected = selectedIndex == targetIndex;
+          final item = items[index];
+          return InkWell(
+            onTap: () => onItemTap(targetIndex),
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: selected ? const Color(0xFF123C3A) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      item.$1,
+                      color: selected ? BcbColors.aqua : const Color(0xFF8F95A8),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    item.$2,
+                    style: TextStyle(
+                      color: selected ? BcbColors.aqua : const Color(0xFF8F95A8),
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
@@ -2549,6 +3140,71 @@ class FieldLabel extends StatelessWidget {
   }
 }
 
+class AuthFieldLabel extends StatelessWidget {
+  final String label;
+
+  const AuthFieldLabel(this.label, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: const TextStyle(
+        color: BcbColors.textSoft,
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+}
+
+class AuthField extends StatelessWidget {
+  final TextEditingController? controller;
+  final IconData? icon;
+  final String hint;
+  final bool obscure;
+
+  const AuthField({
+    super.key,
+    this.controller,
+    this.icon,
+    required this.hint,
+    this.obscure = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      style: const TextStyle(color: Colors.white, fontSize: 16),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(
+          color: BcbColors.textSoft,
+          fontSize: 16,
+        ),
+        filled: true,
+        fillColor: BcbColors.panelSoft,
+        prefixIcon: icon == null ? null : Icon(icon, color: BcbColors.textSoft),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: BcbColors.lineDark),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: BcbColors.lineDark),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: BcbColors.aqua),
+        ),
+      ),
+    );
+  }
+}
+
 class BankingField extends StatelessWidget {
   final TextEditingController? controller;
   final IconData icon;
@@ -2595,12 +3251,16 @@ class FullWidthButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final VoidCallback? onPressed;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
 
   const FullWidthButton({
     super.key,
     required this.label,
     required this.icon,
     this.onPressed,
+    this.backgroundColor,
+    this.foregroundColor,
   });
 
   @override
@@ -2612,8 +3272,8 @@ class FullWidthButton extends StatelessWidget {
         icon: Icon(icon),
         label: Text(label),
         style: ElevatedButton.styleFrom(
-          backgroundColor: BcbColors.primary,
-          foregroundColor: Colors.white,
+          backgroundColor: backgroundColor ?? BcbColors.primary,
+          foregroundColor: foregroundColor ?? Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
