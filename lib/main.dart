@@ -1424,7 +1424,7 @@ class OverviewMetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: BcbColors.panelDark,
         borderRadius: BorderRadius.circular(24),
@@ -1434,14 +1434,14 @@ class OverviewMetricCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           MiniSquareIcon(icon: icon, iconColor: iconColor, bg: iconBg),
-          const SizedBox(height: 26),
+          const SizedBox(height: 18),
           Text(title, style: const TextStyle(color: BcbColors.textSoft, fontSize: 15)),
           const SizedBox(height: 10),
           Text(
             amount,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 21,
+              fontSize: 18,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -1474,7 +1474,7 @@ class LargeActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 108,
+      height: 86,
       decoration: BoxDecoration(
         color: BcbColors.panelDark,
         borderRadius: BorderRadius.circular(22),
@@ -2024,6 +2024,8 @@ class TransferPage extends StatelessWidget {
             InfoItem(Icons.account_balance_rounded, 'BCB to BCB', 'Instant transfers within Bawjiase Community Bank.'),
             InfoItem(Icons.business_rounded, 'Other banks', 'Send to supported bank accounts across Ghana.'),
             InfoItem(Icons.phone_android_rounded, 'Mobile money', 'Move funds to wallet numbers with reference notes.'),
+            InfoItem(Icons.groups_rounded, 'Saved beneficiaries', 'Reuse trusted accounts and wallets without entering details again.'),
+            InfoItem(Icons.receipt_long_rounded, 'Transfer receipts', 'Download or share proof of payment after each transfer.'),
           ],
         ),
       ),
@@ -2072,6 +2074,16 @@ class PaymentsPage extends StatelessWidget {
             title: 'Merchant pay',
             text: 'Scan or enter a merchant code to complete checkout.',
           ),
+          BankingServiceCard(
+            icon: Icons.home_work_rounded,
+            title: 'Rent',
+            text: 'Pay rent and property-related invoices directly from your account.',
+          ),
+          BankingServiceCard(
+            icon: Icons.local_hospital_rounded,
+            title: 'Hospital',
+            text: 'Cover clinic and hospital bills using your patient reference.',
+          ),
         ],
       ),
     );
@@ -2095,6 +2107,8 @@ class CardsPage extends StatelessWidget {
             InfoItem(Icons.lock_rounded, 'Freeze card', 'Pause card use immediately if something feels wrong.'),
             InfoItem(Icons.key_rounded, 'Change PIN', 'Update card PIN through a guided secure flow.'),
             InfoItem(Icons.payments_rounded, 'Limits', 'Set daily ATM and purchase limits for safer spending.'),
+            InfoItem(Icons.public_rounded, 'Online payments', 'Switch online and international payments on or off.'),
+            InfoItem(Icons.report_gmailerrorred_rounded, 'Lost card', 'Report a missing card and request a replacement fast.'),
           ],
         ),
       ),
@@ -2116,6 +2130,7 @@ class SavingsPage extends StatelessWidget {
           GoalCard(title: 'Emergency Fund', amount: 'GHS 3,800', percent: 0.76),
           GoalCard(title: 'School Fees', amount: 'GHS 2,450', percent: 0.49),
           GoalCard(title: 'Market Stock', amount: 'GHS 6,200', percent: 0.62),
+          GoalCard(title: 'Home Project', amount: 'GHS 4,900', percent: 0.31),
         ],
       ),
     );
@@ -2147,6 +2162,21 @@ class SupportPage extends StatelessWidget {
             icon: Icons.report_problem_rounded,
             title: 'Report issue',
             text: 'Flag a failed transfer, card concern, or suspicious activity.',
+          ),
+          BankingServiceCard(
+            icon: Icons.call_rounded,
+            title: 'Call support',
+            text: 'Reach the bank quickly for urgent account or card assistance.',
+          ),
+          BankingServiceCard(
+            icon: Icons.document_scanner_rounded,
+            title: 'Statements',
+            text: 'Request mini statements or account documents from support.',
+          ),
+          BankingServiceCard(
+            icon: Icons.schedule_rounded,
+            title: 'Book visit',
+            text: 'Schedule a branch appointment before you arrive.',
           ),
         ],
       ),
@@ -2195,21 +2225,24 @@ class BankingPageScaffold extends StatelessWidget {
     final isMobile = MediaQuery.of(context).size.width < 920;
 
     return SingleChildScrollView(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1320),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 18 : 22,
-              vertical: 22,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                PageHeader(title: title, subtitle: subtitle),
-                const SizedBox(height: 24),
-                child,
-              ],
+      child: Container(
+        color: BcbColors.appDark,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1320),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 16 : 22,
+                vertical: isMobile ? 16 : 22,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  PageHeader(title: title, subtitle: subtitle),
+                  const SizedBox(height: 20),
+                  child,
+                ],
+              ),
             ),
           ),
         ),
@@ -2230,9 +2263,9 @@ class TransferFormCard extends StatelessWidget {
           Text(
             'New transfer',
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.w900,
-              color: BcbColors.dark,
+              color: Colors.white,
             ),
           ),
           SizedBox(height: 18),
@@ -2267,15 +2300,15 @@ class LoginCard extends StatelessWidget {
           Text(
             'Welcome back',
             style: TextStyle(
-              fontSize: 30,
+              fontSize: 26,
               fontWeight: FontWeight.w900,
-              color: BcbColors.dark,
+              color: Colors.white,
             ),
           ),
           SizedBox(height: 8),
           Text(
             'Enter your customer ID and PIN to continue.',
-            style: TextStyle(color: BcbColors.muted, height: 1.6),
+            style: TextStyle(color: BcbColors.textSoft, height: 1.6),
           ),
           SizedBox(height: 22),
           FieldLabel('Customer ID'),
@@ -2497,19 +2530,16 @@ class PageHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [BcbColors.primaryDeep, BcbColors.primary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(26),
+        color: BcbColors.panelDark,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: BcbColors.lineDark),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x22008A2E),
-            blurRadius: 22,
-            offset: Offset(0, 10),
+            color: Color(0x44000000),
+            blurRadius: 18,
+            offset: Offset(0, 8),
           ),
         ],
       ),
@@ -2529,10 +2559,10 @@ class PageHeader extends StatelessWidget {
           Text(
             subtitle,
             style: const TextStyle(
-              color: Color(0xFFE9FFF0),
-              fontSize: 16,
+              color: BcbColors.textSoft,
+              fontSize: 15,
               height: 1.7,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -2558,13 +2588,13 @@ class SurfaceCard extends StatelessWidget {
         width: double.infinity,
         padding: padding,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(26),
-          border: Border.all(color: BcbColors.border),
+          color: BcbColors.panelDark,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: BcbColors.lineDark),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x12000000),
-              blurRadius: 18,
+              color: Color(0x44000000),
+              blurRadius: 16,
               offset: Offset(0, 8),
             ),
           ],
@@ -2650,8 +2680,8 @@ class BankingServiceCard extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-              color: BcbColors.dark,
-              fontSize: 22,
+              color: Colors.white,
+              fontSize: 20,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -2659,7 +2689,7 @@ class BankingServiceCard extends StatelessWidget {
           Text(
             text,
             style: const TextStyle(
-              color: BcbColors.muted,
+              color: BcbColors.textSoft,
               height: 1.7,
             ),
           ),
@@ -2688,8 +2718,8 @@ class InfoStack extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-              color: BcbColors.dark,
-              fontSize: 26,
+              color: Colors.white,
+              fontSize: 22,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -2728,7 +2758,7 @@ class InfoItem extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: BcbColors.dark,
+                    color: Colors.white,
                     fontWeight: FontWeight.w900,
                     fontSize: 17,
                   ),
@@ -2737,7 +2767,7 @@ class InfoItem extends StatelessWidget {
                 Text(
                   text,
                   style: const TextStyle(
-                    color: BcbColors.muted,
+                    color: BcbColors.textSoft,
                     height: 1.55,
                   ),
                 ),
@@ -2779,7 +2809,7 @@ class GoalCard extends StatelessWidget {
               Text(
                 '${(percent * 100).round()}%',
                 style: const TextStyle(
-                  color: BcbColors.primaryDark,
+                  color: BcbColors.aqua,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -2789,8 +2819,8 @@ class GoalCard extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-              color: BcbColors.dark,
-              fontSize: 22,
+              color: Colors.white,
+              fontSize: 20,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -2798,7 +2828,7 @@ class GoalCard extends StatelessWidget {
           Text(
             amount,
             style: const TextStyle(
-              color: BcbColors.muted,
+              color: BcbColors.textSoft,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -3133,7 +3163,7 @@ class FieldLabel extends StatelessWidget {
     return Text(
       label,
       style: const TextStyle(
-        color: BcbColors.dark,
+        color: Colors.white,
         fontWeight: FontWeight.w900,
       ),
     );
@@ -3224,23 +3254,25 @@ class BankingField extends StatelessWidget {
     return TextField(
       controller: controller,
       obscureText: obscure,
+      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         hintText: hint,
+        hintStyle: const TextStyle(color: BcbColors.textSoft),
         filled: true,
-        fillColor: BcbColors.field,
-        prefixIcon: Icon(icon),
+        fillColor: BcbColors.panelSoft,
+        prefixIcon: Icon(icon, color: BcbColors.textSoft),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: BcbColors.border),
+          borderSide: const BorderSide(color: BcbColors.lineDark),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: BcbColors.border),
+          borderSide: const BorderSide(color: BcbColors.lineDark),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: BcbColors.primary, width: 1.4),
+          borderSide: const BorderSide(color: BcbColors.aqua, width: 1.4),
         ),
       ),
     );
